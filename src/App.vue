@@ -161,7 +161,7 @@
 
 <script>
 
-import { loadTickers } from './api';
+import { subscribeToTicker, unsubscribeToTicker } from './api';
 
 export default {
   name: 'App',
@@ -177,7 +177,7 @@ export default {
       alreadyAdded: null, 
       maxFindShow: 4,
       page: 1,
-      filter: '',   
+      filter: '',    
       
       updateTickersTimeInterval: 3000, 
     }
@@ -197,9 +197,12 @@ export default {
     const tickersData = localStorage.getItem('cryptonomicon-list');
     if (tickersData){
       this.tickers = JSON.parse(tickersData);
-      //this.tickers.forEach(ticker => {
-      //  this.subscribeToUpdate(ticker.name); 
-      //});      
+      this.tickers.forEach(ticker => {
+        subscribeToTicker(ticker.name, (newPrice) => {
+          //console.log('ticker price changed to', newPrice, ticker.name );
+          this.updateTicker(ticker.name, newPrice); 
+        });
+      });
     }
     setInterval(this.updateTickers, this.updateTickersTimeInterval); 
 
@@ -219,6 +222,14 @@ export default {
   },
   
   methods:{
+    updateTicker(tickerName, price){
+      this.tickers
+        .filter(t => t.name === tickerName)
+        .forEach( t => {
+          t.price = price; 
+        });
+    },
+
     formatPrice(price){
       if (price === '-'){
         return price; 
@@ -231,20 +242,16 @@ export default {
       return price > 1 ? price.toFixed(2) : precision;
     }, 
     async updateTickers(){   
-      if (!this.tickers.length){ 
-        return; 
-      }
-      
-      const exchangeData = await loadTickers(this.tickers.map(t => t.name));
-
-      this.tickers.forEach(ticker => {
-        const price = exchangeData[ticker.name.toUpperCase()];
-        ticker.price = price ?? '-'; 
-      });
-
-      // if ( this.selectedTicker?.name == tickerName){
-      //   this.graph.push(exchangeData.USD);
+      // if (!this.tickers.length){ 
+      //   return; 
       // }
+      
+      // const exchangeData = await loadTickers(this.tickers.map(t => t.name));
+
+      // this.tickers.forEach(ticker => {
+      //   const price = exchangeData[ticker.name.toUpperCase()];
+      //   ticker.price = price ?? '-'; 
+      // });
     },
 
     isTickerForSearchExists(name){
@@ -282,13 +289,17 @@ export default {
 
       const currentTicker = {
         name: this.ticker,
-        price: '0', 
+        price: '-', 
       }
 
       //this.tickers.push(currentTicker);
       this.tickers = [...this.tickers, currentTicker]; // ?? что это значит то?!!
-
-      this.filter = '';
+      this.ticker = ""
+      this.filter = "";
+      subscribeToTicker(currentTicker.name, newPrice => 
+          //console.log('ticker price changed to', newPrice, ticker.name );
+          this.updateTicker(currentTicker.name, newPrice)
+        );
 
       // localStorage
       // this.subscribeToUpdate(currentTicker.name); 
@@ -303,7 +314,7 @@ export default {
       if (this.selectedTicker === tickerToRemove){
         this.selectedTicker = null; 
       }
-
+      unsubscribeToTicker(tickerToRemove.name);
     },    
     select(t){
       this.selectedTicker = t;      
