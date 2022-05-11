@@ -1,4 +1,4 @@
-# first-app-necronomicon-1
+# vue3-cryptonomicon
 
 ## Project setup
 ```
