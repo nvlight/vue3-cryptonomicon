@@ -194,6 +194,17 @@ export default {
       }, 0
     );    
 
+    // async function getCoinsList(){  
+    //   const api_url = 'https://min-api.cryptocompare.com/data/all/coinlist?summary=true';
+    //   const f = await fetch(api_url);
+    //     const data = await f.json(); 
+    //     if (data.Response == 'Success'){
+    //       this.coinList = data.Data;
+    //     }
+    //    return; 
+    // }
+    // getCoinsList();
+
     const tickersData = localStorage.getItem('cryptonomicon-list');
     if (tickersData){
       this.tickers = JSON.parse(tickersData);
@@ -220,39 +231,25 @@ export default {
       //console.log(this.filter);
     }    
   },
-  
+
   methods:{
     updateTicker(tickerName, price){
       this.tickers
         .filter(t => t.name === tickerName)
         .forEach( t => {
+          if (t === this.selectedTicker){
+            this.graph.push(price); 
+          }
           t.price = price; 
         });
     },
 
-    formatPrice(price){
+    formatPrice(price){         
       if (price === '-'){
         return price; 
-      }
-      const precision = 
-        (typeof price.toPrecision === 'function')
-        ? price.toPrecision(2)  
-        : '-';              
-      //return price > 1 ? price.toFixed(2) : price.toPrecision(2);
-      return price > 1 ? price.toFixed(2) : precision;
+      }                
+      return price > 1 ? price.toFixed(2) : price.toPrecision(2);
     }, 
-    async updateTickers(){   
-      // if (!this.tickers.length){ 
-      //   return; 
-      // }
-      
-      // const exchangeData = await loadTickers(this.tickers.map(t => t.name));
-
-      // this.tickers.forEach(ticker => {
-      //   const price = exchangeData[ticker.name.toUpperCase()];
-      //   ticker.price = price ?? '-'; 
-      // });
-    },
 
     isTickerForSearchExists(name){
       //console.log('name for exists search: '+name);
